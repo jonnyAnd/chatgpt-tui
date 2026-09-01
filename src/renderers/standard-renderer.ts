@@ -1,0 +1,31 @@
+import { Renderer } from "./index";
+
+/**
+ * A class that renders text immediately after its injested
+ *
+ * @param code The initial text to render
+ * @param render The function to render the code with
+ */
+class StandardRenderer implements Renderer {
+  private _render: (output: string) => void;
+
+  constructor({
+    text = "",
+    render = (str: string): void => {
+      process.stdout.write(str);
+    },
+  } = {}) {
+    this._render = render;
+    render(text);
+  }
+
+  injest(input: string) {
+    this._render(input);
+  }
+
+  flush() {
+    // Nothing to do
+  }
+}
+
+export { StandardRenderer };
