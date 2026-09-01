@@ -1,0 +1,9 @@
+{
+  "main": "dist/sea/index.cjs",
+  "output": "dist/sea/chatgpt-tui.blob",
+  "disableExperimentalSEAWarning": true,
+  "useCodeCache": false,
+  "assets": {
+    "figlet/Standard.flf": "node_modules/figlet/fonts/Standard.flf"
+  }
+}

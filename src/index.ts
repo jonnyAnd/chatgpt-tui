@@ -1,4 +1,5 @@
 import * as util from "util";
+import { getAsset, isSea } from "node:sea";
 import _figlet from "figlet";
 import chalk from "chalk";
 import { program } from "commander";
@@ -9,6 +10,12 @@ import { getCredentials } from "./utils/get-credentials";
 import { setConfig } from "./utils/config";
 
 const figlet = util.promisify(_figlet);
+
+function loadSeaFigletFont() {
+  if (!isSea()) return;
+  _figlet.parseFont("Standard", getAsset("figlet/Standard.flf", "utf8"));
+}
+
 type MainOptions = {
   systemMsg?: string;
   userMsg?: string;
@@ -28,6 +35,7 @@ async function main({
 }: MainOptions = {}) {
   setConfig({ debug: Boolean(debug), allowOutsideWorkspace });
   if (!quiet) {
+    loadSeaFigletFont();
     const figletText = await figlet("ChatGPT TUI");
     console.log(chalk.green.bold(figletText));
   }
