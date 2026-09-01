@@ -1,4 +1,6 @@
 import * as util from "util";
+import { readFileSync } from "fs";
+import { join } from "path";
 import { getAsset, isSea } from "node:sea";
 import _figlet from "figlet";
 import chalk from "chalk";
@@ -9,7 +11,17 @@ import { Conversation } from "./utils/conversation";
 import { getCredentials } from "./utils/get-credentials";
 import { setConfig } from "./utils/config";
 
+declare const __APP_VERSION__: string;
+
 const figlet = util.promisify(_figlet);
+
+function getPackageVersion() {
+  const packageFile = join(__dirname, "..", "package.json");
+  return (JSON.parse(readFileSync(packageFile, "utf8")) as { version: string })
+    .version;
+}
+
+const packageVersion = isSea() ? __APP_VERSION__ : getPackageVersion();
 
 function loadSeaFigletFont() {
   if (!isSea()) return;
@@ -57,6 +69,7 @@ async function main({
 
 if (require.main === module) {
   program
+    .version(packageVersion, "-v, --version", "output the release version")
     .option("-s, --system-msg <msg>", "preload a system message string")
     .option("-u, --user-msg <msg>", "preload a user message string")
     .option("-d, --debug", "print out user messages post parsing")
