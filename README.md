@@ -39,4 +39,15 @@ so target machines do not need Node.js or npm. Build it with Node.js 24 LTS on
 Linux x64. The interactive clipboard action still requires `xsel` on the target
 machine when it is used.
 
+To install a packaged executable system-wide, run its install command with the
+privileges needed to write to `/usr/local/bin`:
+
+```bash
+sudo ./dist/chatgpt-tui-linux-x64 -install
+```
+
+It installs as `chatgpt-tui` without modifying your `PATH`. On normal runs from
+that location, the application creates a per-user configuration directory at
+`$XDG_CONFIG_HOME/chatgpt-tui` or `~/.config/chatgpt-tui`.
+
 Use `--help` to view CLI options. The application defaults to `gpt-5.6-terra`; supply `--model <name>` to select another model available to your OpenAI project.

@@ -10,6 +10,12 @@ import { parseUserInput } from "./parsers";
 import { Conversation } from "./utils/conversation";
 import { getCredentials } from "./utils/get-credentials";
 import { setConfig } from "./utils/config";
+import {
+  ensureConfigDirectory,
+  formatInstallationError,
+  installCurrentExecutable,
+  isInstalledExecutable,
+} from "./utils/install";
 
 declare const __APP_VERSION__: string;
 
@@ -35,6 +41,7 @@ type MainOptions = {
   debug?: boolean;
   quiet?: boolean;
   allowOutsideWorkspace?: boolean;
+  install?: boolean;
 };
 
 async function main({
@@ -44,7 +51,28 @@ async function main({
   debug,
   quiet = false,
   allowOutsideWorkspace = false,
+  install = false,
 }: MainOptions = {}) {
+  if (install) {
+    if (!isSea()) {
+      throw new Error(
+        "Installation must be run from the packaged chatgpt-tui executable."
+      );
+    }
+    try {
+      const result = await installCurrentExecutable();
+      if (result === "already-installed") {
+        console.log("chatgpt-tui is already installed.");
+      } else {
+        console.log("chatgpt-tui was installed to /usr/local/bin/chatgpt-tui.");
+      }
+    } catch (error) {
+      throw new Error(formatInstallationError(error));
+    }
+    return;
+  }
+
+  if (isInstalledExecutable()) await ensureConfigDirectory();
   setConfig({ debug: Boolean(debug), allowOutsideWorkspace });
   if (!quiet) {
     loadSeaFigletFont();
@@ -70,6 +98,7 @@ async function main({
 if (require.main === module) {
   program
     .version(packageVersion, "-v, --version", "output the release version")
+    .option("--install", "install chatgpt-tui to /usr/local/bin")
     .option("-s, --system-msg <msg>", "preload a system message string")
     .option("-u, --user-msg <msg>", "preload a user message string")
     .option("-d, --debug", "print out user messages post parsing")
@@ -83,7 +112,10 @@ if (require.main === module) {
       "model to use for chat, defaults to gpt-5.6-terra"
     );
 
-  program.parse();
+  const args = process.argv.map((arg) =>
+    arg === "-install" ? "--install" : arg
+  );
+  program.parse(args);
 
   main(program.opts()).catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
