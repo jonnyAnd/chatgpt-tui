@@ -1,8 +1,10 @@
 # ChatGPT TUI
 
 ## Updated version of https://github.com/narinluangrath/chatgpt-tui
-
+## Rough beta demo - use at own risk, probably unstable, only for debian based linux
 Terminal interface for OpenAI coding conversations.
+
+
 
 ## Requirements
 
@@ -29,6 +31,15 @@ node dist/index.js
 
 Build a `linux-x64` executable for Debian-based systems with glibc 2.28 or
 newer (for example Debian 10+ or Ubuntu 20.04+):
+
+To install the latest published release directly:
+
+```bash
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/jonnyAnd/chatgpt-tui/main/tools/install.sh)"
+```
+
+The installer requires `python3` to inspect release metadata. Rerun the command
+with appropriate privileges if `/usr/local/bin` is not writable.
 
 ```bash
 npm ci
