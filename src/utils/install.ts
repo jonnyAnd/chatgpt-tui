@@ -80,6 +80,28 @@ async function installCurrentExecutable({
   }
 }
 
+async function replaceInstalledExecutable(
+  sourcePath: string,
+  destinationPath = installationPath
+): Promise<void> {
+  const temporaryPath = path.join(
+    path.dirname(destinationPath),
+    `.${path.basename(destinationPath)}-${process.pid}-${randomUUID()}.tmp`
+  );
+
+  try {
+    await fs.promises.copyFile(
+      sourcePath,
+      temporaryPath,
+      fs.constants.COPYFILE_EXCL
+    );
+    await fs.promises.chmod(temporaryPath, 0o755);
+    await fs.promises.rename(temporaryPath, destinationPath);
+  } finally {
+    await fs.promises.rm(temporaryPath, { force: true }).catch(() => undefined);
+  }
+}
+
 function formatInstallationError(error: unknown): string {
   const code = (error as NodeJS.ErrnoException).code;
   if (code === "EACCES" || code === "EPERM") {
@@ -97,5 +119,6 @@ export {
   installCurrentExecutable,
   installationPath,
   isInstalledExecutable,
+  replaceInstalledExecutable,
 };
 export type { InstallOptions };

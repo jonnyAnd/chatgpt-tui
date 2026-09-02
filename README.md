@@ -1,5 +1,7 @@
 # ChatGPT TUI
 
+## Updated version of https://github.com/narinluangrath/chatgpt-tui
+
 Terminal interface for OpenAI coding conversations.
 
 ## Requirements
@@ -49,5 +51,14 @@ sudo ./dist/chatgpt-tui-linux-x64 -install
 It installs as `chatgpt-tui` without modifying your `PATH`. On normal runs from
 that location, the application creates a per-user configuration directory at
 `$XDG_CONFIG_HOME/chatgpt-tui` or `~/.config/chatgpt-tui`.
+
+Once installed, check for and apply the latest published Linux x64 release with:
+
+```bash
+sudo chatgpt-tui --update
+```
+
+The command verifies the release asset before atomically replacing the installed
+executable. It does not invoke `sudo` itself.
 
 Use `--help` to view CLI options. The application defaults to `gpt-5.6-terra`; supply `--model <name>` to select another model available to your OpenAI project.

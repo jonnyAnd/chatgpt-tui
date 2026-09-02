@@ -4,7 +4,7 @@ import { join } from "path";
 import { getAsset, isSea } from "node:sea";
 import _figlet from "figlet";
 import chalk from "chalk";
-import { program } from "commander";
+import { Command } from "commander";
 import { talk, act } from "./prompts";
 import { parseUserInput } from "./parsers";
 import { Conversation } from "./utils/conversation";
@@ -16,6 +16,7 @@ import {
   installCurrentExecutable,
   isInstalledExecutable,
 } from "./utils/install";
+import { formatUpdateError, updateInstalledExecutable } from "./utils/update";
 
 declare const __APP_VERSION__: string;
 
@@ -42,18 +43,27 @@ type MainOptions = {
   quiet?: boolean;
   allowOutsideWorkspace?: boolean;
   install?: boolean;
+  update?: boolean;
 };
 
-async function main({
-  systemMsg,
-  userMsg,
-  model,
-  debug,
-  quiet = false,
-  allowOutsideWorkspace = false,
-  install = false,
-}: MainOptions = {}) {
+async function main(
+  {
+    systemMsg,
+    userMsg,
+    model,
+    debug,
+    quiet = false,
+    allowOutsideWorkspace = false,
+    install = false,
+    update = false,
+  }: MainOptions = {},
+  installed = isInstalledExecutable()
+) {
   if (install) {
+    if (installed) {
+      console.log("chatgpt-tui is already installed.");
+      return;
+    }
     if (!isSea()) {
       throw new Error(
         "Installation must be run from the packaged chatgpt-tui executable."
@@ -72,7 +82,32 @@ async function main({
     return;
   }
 
-  if (isInstalledExecutable()) await ensureConfigDirectory();
+  if (update) {
+    if (!installed) {
+      console.log("chatgpt-tui must be installed before it can be updated.");
+      return;
+    }
+    try {
+      const result = await updateInstalledExecutable({
+        currentVersion: packageVersion,
+        onUpdateAvailable: (currentVersion, latestVersion) => {
+          console.log(
+            `Updating chatgpt-tui from ${currentVersion} to ${latestVersion}.`
+          );
+        },
+      });
+      if (result.status === "up-to-date") {
+        console.log(
+          `chatgpt-tui ${result.currentVersion} is already up to date.`
+        );
+      }
+    } catch (error) {
+      throw new Error(formatUpdateError(error));
+    }
+    return;
+  }
+
+  if (installed) await ensureConfigDirectory();
   setConfig({ debug: Boolean(debug), allowOutsideWorkspace });
   if (!quiet) {
     loadSeaFigletFont();
@@ -95,10 +130,11 @@ async function main({
   }
 }
 
-if (require.main === module) {
+function createProgram(installed: boolean): Command {
+  const program = new Command();
   program
+    .name("chatgpt-tui")
     .version(packageVersion, "-v, --version", "output the release version")
-    .option("--install", "install chatgpt-tui to /usr/local/bin")
     .option("-s, --system-msg <msg>", "preload a system message string")
     .option("-u, --user-msg <msg>", "preload a user message string")
     .option("-d, --debug", "print out user messages post parsing")
@@ -112,17 +148,55 @@ if (require.main === module) {
       "model to use for chat, defaults to gpt-5.6-terra"
     );
 
-  const args = process.argv.map((arg) =>
-    arg === "-install" ? "--install" : arg
-  );
-  program.parse(args);
+  if (installed) {
+    program.option("--update", "update chatgpt-tui");
+  } else {
+    program.option("--install", "install chatgpt-tui to /usr/local/bin");
+  }
 
-  main(program.opts()).catch((error: unknown) => {
+  return program;
+}
+
+function normalizeArguments(args: string[]): string[] {
+  return args.map((arg) => (arg === "-install" ? "--install" : arg));
+}
+
+function unavailableCommandMessage(args: string[], installed: boolean) {
+  if (installed && args.includes("--install")) {
+    return "chatgpt-tui is already installed.";
+  }
+  if (!installed && args.includes("--update")) {
+    return "chatgpt-tui must be installed before it can be updated.";
+  }
+  return undefined;
+}
+
+async function runCli(
+  args = process.argv,
+  installed = isInstalledExecutable()
+): Promise<void> {
+  const normalizedArgs = normalizeArguments(args);
+  const unavailableMessage = unavailableCommandMessage(
+    normalizedArgs,
+    installed
+  );
+  if (unavailableMessage) {
+    console.log(unavailableMessage);
+    return;
+  }
+
+  const program = createProgram(installed);
+  program.parse(normalizedArgs);
+  await main(program.opts(), installed);
+}
+
+if (require.main === module) {
+  runCli().catch((error: unknown) => {
     const message = error instanceof Error ? error.message : String(error);
     console.error(`ChatGPT-TUI failed: ${message}`);
     process.exitCode = 1;
   });
 }
 
-export { main };
+export { createProgram, main, runCli };
 export type { MainOptions };
