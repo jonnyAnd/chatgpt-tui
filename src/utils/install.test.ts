@@ -2,9 +2,7 @@ import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
 import {
-  ensureConfigDirectory,
   formatInstallationError,
-  getConfigDirectory,
   installCurrentExecutable,
 } from "./install";
 
@@ -17,32 +15,6 @@ describe("installation", () => {
 
   afterEach(() => {
     fs.rmSync(directory, { recursive: true, force: true });
-  });
-
-  it("uses XDG_CONFIG_HOME when it is available", () => {
-    expect(
-      getConfigDirectory({ XDG_CONFIG_HOME: "/config", HOME: "/home/user" })
-    ).toBe("/config/chatgpt-tui");
-  });
-
-  it("uses HOME/.config when XDG_CONFIG_HOME is unavailable", () => {
-    expect(getConfigDirectory({ HOME: "/home/user" })).toBe(
-      "/home/user/.config/chatgpt-tui"
-    );
-  });
-
-  it("creates a writable configuration directory", async () => {
-    const configHome = path.join(directory, "config");
-
-    await expect(
-      ensureConfigDirectory({ XDG_CONFIG_HOME: configHome })
-    ).resolves.toBe(path.join(configHome, "chatgpt-tui"));
-    expect(
-      fs.statSync(path.join(configHome, "chatgpt-tui")).isDirectory()
-    ).toBe(true);
-    expect(() =>
-      fs.accessSync(path.join(configHome, "chatgpt-tui"), fs.constants.W_OK)
-    ).not.toThrow();
   });
 
   it("copies the executable and makes the installed file executable", async () => {

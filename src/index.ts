@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import * as util from "util";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -11,7 +13,6 @@ import { Conversation } from "./utils/conversation";
 import { getCredentials } from "./utils/get-credentials";
 import { setConfig } from "./utils/config";
 import {
-  ensureConfigDirectory,
   formatInstallationError,
   installCurrentExecutable,
   isInstalledExecutable,
@@ -107,7 +108,6 @@ async function main(
     return;
   }
 
-  if (installed) await ensureConfigDirectory();
   setConfig({ debug: Boolean(debug), allowOutsideWorkspace });
   if (!quiet) {
     loadSeaFigletFont();

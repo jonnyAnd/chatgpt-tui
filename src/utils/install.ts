@@ -1,5 +1,4 @@
 import * as fs from "fs";
-import * as os from "os";
 import * as path from "path";
 import { randomUUID } from "crypto";
 
@@ -9,27 +8,6 @@ type InstallOptions = {
   sourcePath?: string;
   destinationPath?: string;
 };
-
-function getConfigDirectory(
-  environment: NodeJS.ProcessEnv = process.env,
-  homeDirectory = os.homedir()
-) {
-  const configHome = environment.XDG_CONFIG_HOME?.trim();
-  if (configHome) return path.join(configHome, "chatgpt-tui");
-
-  const home = environment.HOME?.trim() || homeDirectory;
-  return path.join(home, ".config", "chatgpt-tui");
-}
-
-async function ensureConfigDirectory(
-  environment: NodeJS.ProcessEnv = process.env,
-  homeDirectory = os.homedir()
-): Promise<string> {
-  const directory = getConfigDirectory(environment, homeDirectory);
-  await fs.promises.mkdir(directory, { recursive: true, mode: 0o700 });
-  await fs.promises.access(directory, fs.constants.W_OK);
-  return directory;
-}
 
 function isInstalledExecutable(executablePath = process.execPath): boolean {
   return path.resolve(executablePath) === installationPath;
@@ -113,9 +91,7 @@ function formatInstallationError(error: unknown): string {
 }
 
 export {
-  ensureConfigDirectory,
   formatInstallationError,
-  getConfigDirectory,
   installCurrentExecutable,
   installationPath,
   isInstalledExecutable,

@@ -7,6 +7,13 @@
   "bin": {
     "chatgpt-tui": "dist/index.js"
   },
+  "files": [
+    "dist/index.js",
+    "dist/parsers/**/*.js",
+    "dist/prompts/**/*.js",
+    "dist/renderers/*.js",
+    "dist/utils/**/*.js"
+  ],
   "engines": {
     "node": ">=22"
   },
@@ -27,16 +34,14 @@
     "bundle:sea": "mkdir -p dist/sea && esbuild dist/index.js --bundle --platform=node --format=cjs --target=node22 --define:__APP_VERSION__=\\\"$npm_package_version\\\" --outfile=dist/sea/index.cjs",
     "prepackage:linux": "node -e \"if (process.platform !== 'linux' || process.arch !== 'x64' || process.versions.node.split('.')[0] !== '24') { console.error('package:linux requires Node.js 24 on Linux x64'); process.exit(1); }\"",
     "package:linux": "npm run build && npm run bundle:sea && node --experimental-sea-config sea-config.json && cp \"$(command -v node)\" dist/chatgpt-tui-linux-x64 && postject dist/chatgpt-tui-linux-x64 NODE_SEA_BLOB dist/sea/chatgpt-tui.blob --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2",
-    "shebang": "echo '#!/usr/bin/env node' | cat - dist/index.js > temp && mv temp dist/index.js && chmod +x dist/index.js",
-    "deploy:patch": "npm run build && npm run shebang && npm version patch && npm publish --access public",
-    "deploy:minor": "npm run build && npm run shebang && npm version minor && npm publish --access public",
-    "deploy:major": "npm run build && npm run shebang && npm version major && npm publish --access public"
+    "deploy:patch": "npm run build && npm version patch && npm publish --access public",
+    "deploy:minor": "npm run build && npm version minor && npm publish --access public",
+    "deploy:major": "npm run build && npm version major && npm publish --access public"
   },
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "@types/node": "^24.10.1",
     "esbuild": "^0.27.7",
-    "husky": "^8.0.3",
     "jest": "^30.5.1",
     "postject": "^1.0.0-alpha.6",
     "prettier": "^2.8.4",

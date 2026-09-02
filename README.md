@@ -23,7 +23,6 @@ To build the Node.js CLI:
 
 ```bash
 npm run build
-npm run shebang
 node dist/index.js
 ```
 
@@ -59,9 +58,7 @@ privileges needed to write to `/usr/local/bin`:
 sudo ./dist/chatgpt-tui-linux-x64 -install
 ```
 
-It installs as `chatgpt-tui` without modifying your `PATH`. On normal runs from
-that location, the application creates a per-user configuration directory at
-`$XDG_CONFIG_HOME/chatgpt-tui` or `~/.config/chatgpt-tui`.
+It installs as `chatgpt-tui` without modifying your `PATH`.
 
 Once installed, check for and apply the latest published Linux x64 release with:
 
@@ -73,3 +70,27 @@ The command verifies the release asset before atomically replacing the installed
 executable. It does not invoke `sudo` itself.
 
 Use `--help` to view CLI options. The application defaults to `gpt-5.6-terra`; supply `--model <name>` to select another model available to your OpenAI project.
+
+## CLI arguments
+
+Run `chatgpt-tui --help` (or `node dist/index.js --help` when running from a
+source build) to see the options available in your installation.
+
+| Argument | What it does |
+| --- | --- |
+| `-h, --help` | Show the available command-line options and exit. |
+| `-v, --version` | Print the application version and exit. |
+| `-s, --system-msg <msg>` | Preload a system message that sets instructions or context for the conversation. |
+| `-u, --user-msg <msg>` | Send a user message immediately instead of opening the interactive prompt. The response streams to standard output, which makes this useful in scripts. |
+| `-m, --model <model>` | Select the OpenAI model to use. Defaults to `gpt-5.6-terra`; the model must be available to your OpenAI project. |
+| `-d, --debug` | Print user messages after the application's placeholder parsing, for troubleshooting. |
+| `-q, --quiet` | Do not display the Figlet startup banner. |
+| `--allow-outside-workspace` | Permit `$FILE` and `$FOLDER` references to paths outside the directory where you started the command. Use this only when you intend to provide that access. |
+| `--install` / `-install` | Install a packaged Linux executable as `/usr/local/bin/chatgpt-tui`. This option is available before installation; `-install` is kept as an alias. |
+| `--update` | Download and install the latest published Linux x64 executable. This option is available only from an installed `chatgpt-tui` executable and may require `sudo` to replace it. |
+
+For example, to make a non-interactive request with a specific model:
+
+```bash
+chatgpt-tui --quiet --model gpt-5.6-terra --user-msg "Explain this project"
+```
