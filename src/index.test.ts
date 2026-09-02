@@ -26,10 +26,19 @@ jest.mock("./utils/update", () => ({
   updateInstalledExecutable: jest.fn(),
 }));
 
+jest.mock("./utils/privileges", () => ({
+  runUpdateWithSudo: jest.fn(),
+  updateRequiresPrivileges: jest.fn().mockResolvedValue(false),
+}));
+
 import { createProgram, main, runCli } from "./index";
 import { parseUserInput } from "./parsers";
 import { act } from "./prompts";
 import { updateInstalledExecutable } from "./utils/update";
+import {
+  runUpdateWithSudo,
+  updateRequiresPrivileges,
+} from "./utils/privileges";
 
 describe("main", () => {
   beforeEach(() => {
@@ -44,6 +53,8 @@ describe("main", () => {
       currentVersion: "0.0.0",
       latestVersion: "0.0.0",
     });
+    (updateRequiresPrivileges as jest.Mock).mockResolvedValue(false);
+    (runUpdateWithSudo as jest.Mock).mockResolvedValue(undefined);
   });
 
   it("streams --user-msg responses without opening the interactive action menu", async () => {
@@ -106,5 +117,14 @@ describe("main", () => {
       "chatgpt-tui 0.0.0 is already up to date."
     );
     log.mockRestore();
+  });
+
+  it("requests administrator permission before updating an unwritable installation", async () => {
+    (updateRequiresPrivileges as jest.Mock).mockResolvedValue(true);
+
+    await main({ update: true }, true);
+
+    expect(runUpdateWithSudo).toHaveBeenCalledWith();
+    expect(updateInstalledExecutable).not.toHaveBeenCalled();
   });
 });

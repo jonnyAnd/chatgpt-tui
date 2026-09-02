@@ -63,11 +63,12 @@ It installs as `chatgpt-tui` without modifying your `PATH`.
 Once installed, check for and apply the latest published Linux x64 release with:
 
 ```bash
-sudo chatgpt-tui --update
+chatgpt-tui --update
 ```
 
 The command verifies the release asset before atomically replacing the installed
-executable. It does not invoke `sudo` itself.
+executable. If the installation directory requires administrator permission, it
+prompts for your password through `sudo`.
 
 Use `--help` to view CLI options. The application defaults to `gpt-5.6-terra`; supply `--model <name>` to select another model available to your OpenAI project.
 
@@ -87,7 +88,7 @@ source build) to see the options available in your installation.
 | `-q, --quiet` | Do not display the Figlet startup banner. |
 | `-l, --location <path>` | Set the workspace for this run. Relative `$FILE` and `$FOLDER` paths are resolved from this folder, and paths outside it are not imported. Defaults to the directory where you started the command. |
 | `--install` / `-install` | Install a packaged Linux executable as `/usr/local/bin/chatgpt-tui`. This option is available before installation; `-install` is kept as an alias. |
-| `--update` | Download and install the latest published Linux x64 executable. This option is available only from an installed `chatgpt-tui` executable and may require `sudo` to replace it. |
+| `--update` | Download and install the latest published Linux x64 executable. This option is available only from an installed `chatgpt-tui` executable; it requests administrator permission when needed. |
 
 For example, use `~/projects/my-app` as the workspace and import its
 `package.json` file with:

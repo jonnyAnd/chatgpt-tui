@@ -18,6 +18,10 @@ import {
   isInstalledExecutable,
 } from "./utils/install";
 import { formatUpdateError, updateInstalledExecutable } from "./utils/update";
+import {
+  runUpdateWithSudo,
+  updateRequiresPrivileges,
+} from "./utils/privileges";
 
 declare const __APP_VERSION__: string;
 
@@ -106,6 +110,11 @@ async function main(
       return;
     }
     try {
+      if (await updateRequiresPrivileges()) {
+        await runUpdateWithSudo();
+        return;
+      }
+
       const result = await updateInstalledExecutable({
         currentVersion: packageVersion,
         onUpdateAvailable: (currentVersion, latestVersion) => {
