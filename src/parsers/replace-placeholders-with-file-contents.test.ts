@@ -1,5 +1,8 @@
 import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
 import { replacePlaceholdersWithFileContents } from "./replace-placeholders-with-file-contents";
+import { getConfig, setConfig } from "../utils/config";
 
 describe("replacePlaceholdersWithFileContents", () => {
   const tempFiles = ["empty.txt", "test1.txt", "test2.txt", "test3.txt"];
@@ -53,6 +56,31 @@ describe("replacePlaceholdersWithFileContents", () => {
     expect(console.warn).toHaveBeenCalledWith(
       expect.stringContaining("outside the current workspace")
     );
+  });
+
+  test("resolves relative paths from the configured workspace and blocks external paths", () => {
+    const previousWorkspaceRoot = getConfig().workspaceRoot;
+    const workspaceRoot = fs.mkdtempSync(
+      path.join(os.tmpdir(), "chatgpt-tui-workspace-")
+    );
+    fs.writeFileSync(path.join(workspaceRoot, "workspace.txt"), "workspace");
+    setConfig({ workspaceRoot: fs.realpathSync(workspaceRoot) });
+    console.warn = jest.fn();
+
+    try {
+      expect(replacePlaceholdersWithFileContents("$FILE(workspace.txt)")[0]).toBe(
+        "workspace"
+      );
+      expect(replacePlaceholdersWithFileContents(`$FILE(${__filename})`)[0]).toBe(
+        `$FILE(${__filename})`
+      );
+      expect(console.warn).toHaveBeenCalledWith(
+        expect.stringContaining("outside the current workspace")
+      );
+    } finally {
+      setConfig({ workspaceRoot: previousWorkspaceRoot });
+      fs.rmSync(workspaceRoot, { recursive: true, force: true });
+    }
   });
 
   afterAll(() => {

@@ -12,13 +12,11 @@ function isWithinRoot(filePath: string, root: string): boolean {
 
 function assertReadableFile(fileName: string): string {
   const config = getConfig();
-  const resolvedPath = path.resolve(fileName);
-  if (
-    !config.allowOutsideWorkspace &&
-    !isWithinRoot(resolvedPath, config.workspaceRoot)
-  ) {
+  const requestedPath = path.resolve(config.workspaceRoot, fileName);
+  const resolvedPath = fs.realpathSync(requestedPath);
+  if (!isWithinRoot(resolvedPath, config.workspaceRoot)) {
     throw new Error(
-      "File is outside the current workspace. Use --allow-outside-workspace to opt in."
+      "File is outside the current workspace. Use --location to select its workspace."
     );
   }
   const stat = fs.statSync(resolvedPath);

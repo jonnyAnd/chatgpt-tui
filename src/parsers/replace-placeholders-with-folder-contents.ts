@@ -28,13 +28,11 @@ function replacePlaceholdersWithFolderContents(
     const folderName = match.slice("$FOLDER(".length, -1);
     try {
       const config = getConfig();
-      const folderPath = path.resolve(folderName);
-      if (
-        !config.allowOutsideWorkspace &&
-        !isWithinRoot(folderPath, config.workspaceRoot)
-      ) {
+      const requestedPath = path.resolve(config.workspaceRoot, folderName);
+      const folderPath = fs.realpathSync(requestedPath);
+      if (!isWithinRoot(folderPath, config.workspaceRoot)) {
         throw new Error(
-          "Folder is outside the current workspace. Use --allow-outside-workspace to opt in."
+          "Folder is outside the current workspace. Use --location to select its workspace."
         );
       }
       const files = fs

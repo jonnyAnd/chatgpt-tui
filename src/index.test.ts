@@ -68,6 +68,13 @@ describe("main", () => {
     expect(createProgram(false).helpInformation()).not.toContain("--update");
   });
 
+  it("offers a location option and no longer offers outside-workspace access", () => {
+    const help = createProgram(false).helpInformation();
+
+    expect(help).toContain("-l, --location <path>");
+    expect(help).not.toContain("--allow-outside-workspace");
+  });
+
   it("only shows update when the application is installed", () => {
     expect(createProgram(true).helpInformation()).toContain("--update");
     expect(createProgram(true).helpInformation()).not.toContain("--install");

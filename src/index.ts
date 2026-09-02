@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import * as util from "util";
-import { readFileSync } from "fs";
-import { join } from "path";
+import { readFileSync, realpathSync, statSync } from "fs";
+import { join, resolve } from "path";
 import { getAsset, isSea } from "node:sea";
 import _figlet from "figlet";
 import chalk from "chalk";
@@ -42,10 +42,27 @@ type MainOptions = {
   model?: string;
   debug?: boolean;
   quiet?: boolean;
-  allowOutsideWorkspace?: boolean;
+  location?: string;
   install?: boolean;
   update?: boolean;
 };
+
+function resolveWorkspaceRoot(location?: string): string {
+  const requestedPath = resolve(location ?? process.cwd());
+  let workspaceRoot: string;
+  try {
+    workspaceRoot = realpathSync(requestedPath);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Could not resolve workspace location: ${message}`);
+  }
+
+  if (!statSync(workspaceRoot).isDirectory()) {
+    throw new Error("Workspace location must be a directory.");
+  }
+
+  return workspaceRoot;
+}
 
 async function main(
   {
@@ -54,7 +71,7 @@ async function main(
     model,
     debug,
     quiet = false,
-    allowOutsideWorkspace = false,
+    location,
     install = false,
     update = false,
   }: MainOptions = {},
@@ -108,7 +125,10 @@ async function main(
     return;
   }
 
-  setConfig({ debug: Boolean(debug), allowOutsideWorkspace });
+  setConfig({
+    debug: Boolean(debug),
+    workspaceRoot: resolveWorkspaceRoot(location),
+  });
   if (!quiet) {
     loadSeaFigletFont();
     const figletText = await figlet("ChatGPT TUI");
@@ -140,8 +160,8 @@ function createProgram(installed: boolean): Command {
     .option("-d, --debug", "print out user messages post parsing")
     .option("-q, --quiet", "disable figlet")
     .option(
-      "--allow-outside-workspace",
-      "allow $FILE and $FOLDER paths outside the current working directory"
+      "-l, --location <path>",
+      "set the workspace used to resolve $FILE and $FOLDER paths"
     )
     .option(
       "-m, --model <model>",

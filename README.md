@@ -85,9 +85,16 @@ source build) to see the options available in your installation.
 | `-m, --model <model>` | Select the OpenAI model to use. Defaults to `gpt-5.6-terra`; the model must be available to your OpenAI project. |
 | `-d, --debug` | Print user messages after the application's placeholder parsing, for troubleshooting. |
 | `-q, --quiet` | Do not display the Figlet startup banner. |
-| `--allow-outside-workspace` | Permit `$FILE` and `$FOLDER` references to paths outside the directory where you started the command. Use this only when you intend to provide that access. |
+| `-l, --location <path>` | Set the workspace for this run. Relative `$FILE` and `$FOLDER` paths are resolved from this folder, and paths outside it are not imported. Defaults to the directory where you started the command. |
 | `--install` / `-install` | Install a packaged Linux executable as `/usr/local/bin/chatgpt-tui`. This option is available before installation; `-install` is kept as an alias. |
 | `--update` | Download and install the latest published Linux x64 executable. This option is available only from an installed `chatgpt-tui` executable and may require `sudo` to replace it. |
+
+For example, use `~/projects/my-app` as the workspace and import its
+`package.json` file with:
+
+```bash
+chatgpt-tui --location ~/projects/my-app --user-msg '$FILE(package.json)'
+```
 
 For example, to make a non-interactive request with a specific model:
 

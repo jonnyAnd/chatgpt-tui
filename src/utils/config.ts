@@ -1,7 +1,6 @@
 type Config = {
   debug: boolean;
   workspaceRoot: string;
-  allowOutsideWorkspace: boolean;
   maxImportBytes: number;
   maxFolderFiles: number;
   maxUrlBytes: number;
@@ -10,7 +9,6 @@ type Config = {
 let config: Config = {
   debug: false,
   workspaceRoot: process.cwd(),
-  allowOutsideWorkspace: false,
   maxImportBytes: 500_000,
   maxFolderFiles: 100,
   maxUrlBytes: 1_000_000,
