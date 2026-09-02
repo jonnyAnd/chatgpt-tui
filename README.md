@@ -38,8 +38,8 @@ To install the latest published release directly:
 sh -c "$(curl -fsSL https://raw.githubusercontent.com/jonnyAnd/chatgpt-tui/main/tools/install.sh)"
 ```
 
-The installer requires `python3` to inspect release metadata. Rerun the command
-with appropriate privileges if `/usr/local/bin` is not writable.
+The installer requires `python3` to inspect release metadata. It prompts for an
+administrator password through `sudo` if `/usr/local/bin` is not writable.
 
 ```bash
 npm ci

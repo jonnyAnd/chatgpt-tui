@@ -16,7 +16,19 @@ cleanup() {
     rm -rf "$TEMPORARY_DIRECTORY"
   fi
   if [ -n "${INSTALL_TEMPORARY_FILE:-}" ]; then
-    rm -f "$INSTALL_TEMPORARY_FILE"
+    if [ -n "${INSTALL_WITH_SUDO:-}" ]; then
+      sudo rm -f "$INSTALL_TEMPORARY_FILE" >/dev/null 2>&1 || true
+    else
+      rm -f "$INSTALL_TEMPORARY_FILE"
+    fi
+  fi
+}
+
+install_command() {
+  if [ -n "${INSTALL_WITH_SUDO:-}" ]; then
+    sudo "$@"
+  else
+    "$@"
   fi
 }
 
@@ -130,7 +142,7 @@ DOWNLOADED_EXECUTABLE="$TEMPORARY_DIRECTORY/$ASSET_NAME"
 
 printf '%s\n' "Found version $VERSION"
 printf '%s\n' "Downloading"
-if ! curl -fsSL \
+if ! curl -fL --progress-bar \
   -H "Accept: application/octet-stream" \
   -H "User-Agent: chatgpt-tui-installer" \
   "$DOWNLOAD_URL" \
@@ -161,23 +173,33 @@ INSTALL_DIRECTORY=$(dirname "$INSTALL_PATH")
 [ -d "$INSTALL_DIRECTORY" ] || fail "Installation directory $INSTALL_DIRECTORY does not exist."
 
 printf '%s\n' "Installing"
-if ! INSTALL_TEMPORARY_FILE=$(mktemp "$INSTALL_DIRECTORY/.chatgpt-tui.XXXXXX"); then
-  fail "Installation needs permission to write to $INSTALL_DIRECTORY. Rerun this installer with appropriate privileges."
+if [ ! -w "$INSTALL_DIRECTORY" ]; then
+  command -v sudo >/dev/null 2>&1 || fail "Installation needs permission to write to $INSTALL_DIRECTORY, but sudo is not available."
+  printf '%s\n' "Administrator privileges are required to install to $INSTALL_DIRECTORY."
+  if ! sudo -v; then
+    fail "Administrator privileges are required to install to $INSTALL_DIRECTORY."
+  fi
+  INSTALL_WITH_SUDO=1
 fi
-if ! cp "$DOWNLOADED_EXECUTABLE" "$INSTALL_TEMPORARY_FILE" || ! chmod 755 "$INSTALL_TEMPORARY_FILE"; then
+
+if ! INSTALL_TEMPORARY_FILE=$(install_command mktemp "$INSTALL_DIRECTORY/.chatgpt-tui.XXXXXX"); then
+  fail "Could not prepare the installation in $INSTALL_DIRECTORY."
+fi
+if ! install_command cp "$DOWNLOADED_EXECUTABLE" "$INSTALL_TEMPORARY_FILE" \
+  || ! install_command chmod 755 "$INSTALL_TEMPORARY_FILE"; then
   fail "Could not prepare the executable for installation."
 fi
 
-if ! ln "$INSTALL_TEMPORARY_FILE" "$INSTALL_PATH"; then
+if ! install_command ln "$INSTALL_TEMPORARY_FILE" "$INSTALL_PATH"; then
   if [ -e "$INSTALL_PATH" ] || [ -L "$INSTALL_PATH" ]; then
     printf '%s\n' "An existing chatgpt-tui installation was detected at $INSTALL_PATH."
     printf '%s\n' "Use chatgpt-tui --update instead."
     exit 0
   fi
-  fail "Installation needs permission to write to $INSTALL_DIRECTORY. Rerun this installer with appropriate privileges."
+  fail "Could not install chatgpt-tui to $INSTALL_DIRECTORY."
 fi
 
-rm -f "$INSTALL_TEMPORARY_FILE"
+install_command rm -f "$INSTALL_TEMPORARY_FILE"
 INSTALL_TEMPORARY_FILE=
 
 printf '%s\n' "Installation complete. You can now run: chatgpt-tui"
