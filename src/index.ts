@@ -7,11 +7,13 @@ import { getAsset, isSea } from "node:sea";
 import _figlet from "figlet";
 import chalk from "chalk";
 import { Command } from "commander";
+import prompts from "prompts";
 import { talk, act } from "./prompts";
 import { parseUserInput } from "./parsers";
 import { Conversation } from "./utils/conversation";
 import { getCredentials } from "./utils/get-credentials";
 import { setConfig } from "./utils/config";
+import { LiveFilesystem } from "./utils/live-filesystem";
 import {
   formatInstallationError,
   installCurrentExecutable,
@@ -66,6 +68,17 @@ function resolveWorkspaceRoot(location?: string): string {
   }
 
   return workspaceRoot;
+}
+
+async function confirmLiveFilesystemAccess(
+  workspaceRoot: string
+): Promise<boolean> {
+  const response = await prompts({
+    type: "text",
+    name: "answer",
+    message: `Grant the model live filesystem access to ${workspaceRoot}? (y/n)`,
+  });
+  return response.answer === "y";
 }
 
 async function main(
@@ -134,17 +147,29 @@ async function main(
     return;
   }
 
+  const workspaceRoot = resolveWorkspaceRoot(location);
   setConfig({
     debug: Boolean(debug),
-    workspaceRoot: resolveWorkspaceRoot(location),
+    workspaceRoot,
   });
+  const filesystem = location
+    ? (await confirmLiveFilesystemAccess(workspaceRoot))
+      ? new LiveFilesystem(workspaceRoot)
+      : undefined
+    : undefined;
+  if (location && !filesystem) return;
   if (!quiet) {
     loadSeaFigletFont();
     const figletText = await figlet("ChatGPT TUI");
     console.log(chalk.green.bold(figletText));
   }
   const apiKey = await getCredentials();
-  const conversation = new Conversation({ apiKey, systemMsg, model });
+  const conversation = new Conversation({
+    apiKey,
+    systemMsg,
+    model,
+    filesystem,
+  });
   if (!userMsg) {
     const fileHint = await talk(conversation, false);
     if (conversation.hasResponse()) await act(conversation, fileHint);

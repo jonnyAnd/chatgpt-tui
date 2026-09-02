@@ -1,5 +1,9 @@
 import OpenAI from "openai";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
 import { Conversation, renderResponseStream } from "./conversation";
+import { LiveFilesystem } from "./live-filesystem";
 
 const stream = (events: unknown[]) => ({
   async *[Symbol.asyncIterator]() {
@@ -62,6 +66,63 @@ describe("Conversation", () => {
     expect(conversation.hasResponse()).toBe(false);
     conversation.reset();
     expect(conversation.lastMessage()).toBeUndefined();
+  });
+
+  it("executes approved filesystem tool calls before continuing the response", async () => {
+    const workspace = fs.mkdtempSync(
+      path.join(os.tmpdir(), "chatgpt-tui-live-")
+    );
+    fs.writeFileSync(path.join(workspace, "note.txt"), "live content");
+    const create = jest
+      .fn()
+      .mockResolvedValueOnce(
+        stream([
+          {
+            type: "response.output_item.done",
+            item: {
+              type: "function_call",
+              call_id: "call_1",
+              name: "read_file",
+              arguments: '{"path":"note.txt"}',
+            },
+          },
+          { type: "response.completed", response: { id: "resp_tool" } },
+        ])
+      )
+      .mockResolvedValueOnce(
+        stream([
+          { type: "response.output_text.delta", delta: "Found it" },
+          { type: "response.completed", response: { id: "resp_final" } },
+        ])
+      );
+    const renderer = { injest: jest.fn(), flush: jest.fn() };
+    const conversation = new Conversation({
+      apiKey: "test",
+      client: { responses: { create } } as unknown as OpenAI,
+      renderer,
+      filesystem: new LiveFilesystem(workspace),
+    });
+
+    try {
+      await expect(conversation.talk("Read the note")).resolves.toMatchObject({
+        ok: true,
+        content: "Found it",
+        responseId: "resp_final",
+      });
+      expect(create.mock.calls[0][0].tools).toEqual(expect.any(Array));
+      expect(create.mock.calls[1][0]).toMatchObject({
+        previous_response_id: "resp_tool",
+        input: [
+          {
+            type: "function_call_output",
+            call_id: "call_1",
+            output: "live content",
+          },
+        ],
+      });
+    } finally {
+      fs.rmSync(workspace, { recursive: true, force: true });
+    }
   });
 });
 

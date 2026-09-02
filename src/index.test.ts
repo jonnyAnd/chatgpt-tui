@@ -11,6 +11,8 @@ jest.mock("./prompts", () => ({
   act: jest.fn(),
 }));
 
+jest.mock("prompts", () => jest.fn());
+
 const talk = jest
   .fn()
   .mockResolvedValue({ ok: true, content: "response", responseId: "resp_1" });
@@ -32,6 +34,7 @@ jest.mock("./utils/privileges", () => ({
 }));
 
 import { createProgram, main, runCli } from "./index";
+import prompts from "prompts";
 import { parseUserInput } from "./parsers";
 import { act } from "./prompts";
 import { updateInstalledExecutable } from "./utils/update";
@@ -43,6 +46,7 @@ import {
 describe("main", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (prompts as jest.Mock).mockResolvedValue({ answer: "n" });
     talk.mockResolvedValue({
       ok: true,
       content: "response",
@@ -63,6 +67,25 @@ describe("main", () => {
     expect(parseUserInput).toHaveBeenCalledWith("message");
     expect(talk).toHaveBeenCalledWith("parsed message");
     expect(act).not.toHaveBeenCalled();
+  });
+
+  it("only starts a location-based chat after the user types y", async () => {
+    (prompts as jest.Mock).mockResolvedValue({ answer: "y" });
+
+    await main({ userMsg: "message", quiet: true, location: process.cwd() });
+
+    expect(prompts).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining(process.cwd()),
+      })
+    );
+    expect(talk).toHaveBeenCalledWith("parsed message");
+  });
+
+  it("exits without contacting the model when location access is declined", async () => {
+    await main({ userMsg: "message", quiet: true, location: process.cwd() });
+
+    expect(talk).not.toHaveBeenCalled();
   });
 
   it("reports an existing installation without trying to install again", async () => {

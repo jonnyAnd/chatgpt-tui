@@ -1,10 +1,10 @@
 # ChatGPT TUI
 
 ## Updated version of https://github.com/narinluangrath/chatgpt-tui
+
 ## Rough beta demo - use at own risk, probably unstable, only for debian based linux
+
 Terminal interface for OpenAI coding conversations.
-
-
 
 ## Requirements
 
@@ -77,18 +77,18 @@ Use `--help` to view CLI options. The application defaults to `gpt-5.6-terra`; s
 Run `chatgpt-tui --help` (or `node dist/index.js --help` when running from a
 source build) to see the options available in your installation.
 
-| Argument | What it does |
-| --- | --- |
-| `-h, --help` | Show the available command-line options and exit. |
-| `-v, --version` | Print the application version and exit. |
-| `-s, --system-msg <msg>` | Preload a system message that sets instructions or context for the conversation. |
-| `-u, --user-msg <msg>` | Send a user message immediately instead of opening the interactive prompt. The response streams to standard output, which makes this useful in scripts. |
-| `-m, --model <model>` | Select the OpenAI model to use. Defaults to `gpt-5.6-terra`; the model must be available to your OpenAI project. |
-| `-d, --debug` | Print user messages after the application's placeholder parsing, for troubleshooting. |
-| `-q, --quiet` | Do not display the Figlet startup banner. |
-| `-l, --location <path>` | Set the workspace for this run. Relative `$FILE` and `$FOLDER` paths are resolved from this folder, and paths outside it are not imported. Defaults to the directory where you started the command. |
-| `--install` / `-install` | Install a packaged Linux executable as `/usr/local/bin/chatgpt-tui`. This option is available before installation; `-install` is kept as an alias. |
-| `--update` | Download and install the latest published Linux x64 executable. This option is available only from an installed `chatgpt-tui` executable; it requests administrator permission when needed. |
+| Argument                 | What it does                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `-h, --help`             | Show the available command-line options and exit.                                                                                                                                                                                                                                                                                                                      |
+| `-v, --version`          | Print the application version and exit.                                                                                                                                                                                                                                                                                                                                |
+| `-s, --system-msg <msg>` | Preload a system message that sets instructions or context for the conversation.                                                                                                                                                                                                                                                                                       |
+| `-u, --user-msg <msg>`   | Send a user message immediately instead of opening the interactive prompt. The response streams to standard output, which makes this useful in scripts.                                                                                                                                                                                                                |
+| `-m, --model <model>`    | Select the OpenAI model to use. Defaults to `gpt-5.6-terra`; the model must be available to your OpenAI project.                                                                                                                                                                                                                                                       |
+| `-d, --debug`            | Print user messages after the application's placeholder parsing, for troubleshooting.                                                                                                                                                                                                                                                                                  |
+| `-q, --quiet`            | Do not display the Figlet startup banner.                                                                                                                                                                                                                                                                                                                              |
+| `-l, --location <path>`  | Set the workspace for this run. After showing its resolved full path, the app asks whether to grant the model live filesystem access for this chat; only `y` grants it. The model can read files immediately, but each proposed file creation or update is shown and separately requires `y`. Relative `$FILE` and `$FOLDER` paths are also resolved from this folder. |
+| `--install` / `-install` | Install a packaged Linux executable as `/usr/local/bin/chatgpt-tui`. This option is available before installation; `-install` is kept as an alias.                                                                                                                                                                                                                     |
+| `--update`               | Download and install the latest published Linux x64 executable. This option is available only from an installed `chatgpt-tui` executable; it requests administrator permission when needed.                                                                                                                                                                            |
 
 For example, use `~/projects/my-app` as the workspace and import its
 `package.json` file with:
